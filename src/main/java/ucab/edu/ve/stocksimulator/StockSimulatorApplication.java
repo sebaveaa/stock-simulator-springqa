@@ -1,5 +1,6 @@
 package ucab.edu.ve.stocksimulator;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -8,9 +9,13 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 import java.util.Arrays;
+import java.util.List;
 
 @SpringBootApplication
 public class StockSimulatorApplication {
+
+	@Value("${cors.allowed.origins:http://localhost:4200}")
+	private String allowedOrigins;
 
 	public static void main(String[] args) {
 		SpringApplication.run(StockSimulatorApplication.class, args);
@@ -20,7 +25,9 @@ public class StockSimulatorApplication {
 	public CorsFilter corsFilter() {
 		CorsConfiguration corsConfiguration = new CorsConfiguration();
 		corsConfiguration.setAllowCredentials(true);
-		corsConfiguration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+		// Permitir múltiples orígenes separados por coma
+		List<String> origins = Arrays.asList(allowedOrigins.split(","));
+		corsConfiguration.setAllowedOrigins(origins);
 		corsConfiguration.setAllowedHeaders(Arrays.asList("Origin", "Access-Control-Allow-Origin", "Content-Type",
 				"Accept", "Authorization", "Origin, Accept", "X-Requested-With",
 				"Access-Control-Request-Method", "Access-Control-Request-Headers"));
