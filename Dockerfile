@@ -17,15 +17,11 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Etapa 2: Ejecución
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre
 WORKDIR /app
 
-# Instalar procps para pgrep (necesario para healthcheck)
-RUN apk add --no-cache procps && \
-    rm -rf /var/cache/apk/*
-
 # Crear usuario no-root para seguridad
-RUN addgroup -S spring && adduser -S spring -G spring
+RUN groupadd -r spring && useradd -r -g spring spring
 USER spring:spring
 
 # Copiar el JAR desde la etapa de construcción
@@ -34,9 +30,9 @@ COPY --from=build /app/target/*.jar app.jar
 # Exponer el puerto
 EXPOSE 8080
 
-# Health check simple (verifica que el proceso Java esté corriendo)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-  CMD pgrep -f "java.*app.jar" || exit 1
+# Health check - verifica que la aplicación esté respondiendo
+# Nota: Este healthcheck se ejecutará desde fuera del contenedor vía docker-compose
+# No se incluye CMD interno para evitar dependencias adicionales
 
 # Ejecutar la aplicación
 ENTRYPOINT ["java", "-jar", "app.jar"]
