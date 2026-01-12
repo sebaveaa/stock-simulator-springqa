@@ -48,6 +48,8 @@ public class TestDataLoader {
      * @throws SQLException si hay error al ejecutar los scripts
      */
     public static void loadAllTestData(DataSource dataSource) throws SQLException {
+        // Aseguramos base limpia antes de insertar datos seed
+        cleanAll(dataSource);
         loadTestStocks(dataSource);  // Cargar acciones primero
         loadTestUsers(dataSource);   // Luego usuarios
     }
@@ -58,9 +60,13 @@ public class TestDataLoader {
      * @param dataSource DataSource de la base de datos de prueba
      * @throws SQLException si hay error al limpiar las tablas
      */
-    public static void cleanDatabase(DataSource dataSource) throws SQLException {
-        ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
-        populator.setSeparator(";");
-        populator.execute(dataSource);
+    public static void cleanAll(DataSource dataSource) throws SQLException {
+        try (var conn = dataSource.getConnection(); var stmt = conn.createStatement()) {
+            // Orden respeta FKs: primero hijos, luego padres
+            stmt.executeUpdate("DELETE FROM transactions");
+            stmt.executeUpdate("DELETE FROM owned_stock");
+            stmt.executeUpdate("DELETE FROM stock");
+            stmt.executeUpdate("DELETE FROM stockuser");
+        }
     }
 }
