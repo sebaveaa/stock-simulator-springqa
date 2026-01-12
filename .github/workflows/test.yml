@@ -24,12 +24,12 @@ jobs:
       
       - name: Ejecutar tests unitarios
         run: |
-          mvn clean test -Dtest="!**/integration/**" -DfailIfNoTests=false
+          mvn clean test -Dtest="!**/integration/**,!**/StockSimulatorApplicationTests" -DfailIfNoTests=false
       
       - name: Generar reporte de cobertura
         if: always()
         run: |
-          mvn jacoco:report -Dtest="!**/integration/**"
+          mvn jacoco:report -Dtest="!**/integration/**,!**/StockSimulatorApplicationTests"
       
       - name: Subir reporte de cobertura como artefacto
         if: always()
@@ -43,21 +43,6 @@ jobs:
     name: Tests de Integración
     runs-on: ubuntu-latest
     
-    services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: stocksimulator_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-    
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
@@ -69,21 +54,16 @@ jobs:
           distribution: 'temurin'
           cache: maven
       
-      - name: Configurar Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      
       - name: Ejecutar tests de integración
         run: |
-          mvn clean test -Dtest="**/integration/**" -DfailIfNoTests=false
+          mvn clean test -Dtest="**/integration/**,**/StockSimulatorApplicationTests" -DfailIfNoTests=false
         env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/stocksimulator_test
-          SPRING_DATASOURCE_USERNAME: test
-          SPRING_DATASOURCE_PASSWORD: test
+          SPRING_PROFILES_ACTIVE: test
       
       - name: Generar reporte de cobertura para integración
         if: always()
         run: |
-          mvn jacoco:report -Dtest="**/integration/**"
+          mvn jacoco:report -Dtest="**/integration/**,**/StockSimulatorApplicationTests"
       
       - name: Subir reporte de cobertura como artefacto
         if: always()
@@ -98,21 +78,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [unit-tests, integration-tests]
     
-    services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: stocksimulator_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-    
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
@@ -124,16 +89,11 @@ jobs:
           distribution: 'temurin'
           cache: maven
       
-      - name: Configurar Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      
       - name: Ejecutar todos los tests
         run: |
           mvn clean test
         env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/stocksimulator_test
-          SPRING_DATASOURCE_USERNAME: test
-          SPRING_DATASOURCE_PASSWORD: test
+          SPRING_PROFILES_ACTIVE: test
       
       - name: Verificar cobertura de código
         run: |
