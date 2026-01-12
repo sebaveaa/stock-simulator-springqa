@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * - Usabilidad: Respuestas JSON estructuradas correctamente
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
+// @Testcontainers
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class StockQueryIntegrationTest {
@@ -49,18 +49,21 @@ public class StockQueryIntegrationTest {
     @LocalServerPort
     private int port;
 
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
-            .withDatabaseName("stocksimulator_test")
-            .withUsername("test")
-            .withPassword("test");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
+    /*
+     * @Container
+     * static PostgreSQLContainer<?> postgres = new
+     * PostgreSQLContainer<>("postgres:15-alpine")
+     * .withDatabaseName("stocksimulator_test")
+     * .withUsername("test")
+     * .withPassword("test");
+     * 
+     * @DynamicPropertySource
+     * static void configureProperties(DynamicPropertyRegistry registry) {
+     * registry.add("spring.datasource.url", postgres::getJdbcUrl);
+     * registry.add("spring.datasource.username", postgres::getUsername);
+     * registry.add("spring.datasource.password", postgres::getPassword);
+     * }
+     */
 
     @Autowired
     private DataSource dataSource;
@@ -96,7 +99,8 @@ public class StockQueryIntegrationTest {
     /**
      * IT-005: Prueba de integración - Consultar todas las acciones disponibles
      *
-     * Objetivo: Validar que el endpoint /api/stock/all devuelve todas las acciones del mercado
+     * Objetivo: Validar que el endpoint /api/stock/all devuelve todas las acciones
+     * del mercado
      * ISO/IEC 25010: Funcionalidad (Correctitud) - Datos completos y precisos
      */
     @Test
@@ -105,13 +109,13 @@ public class StockQueryIntegrationTest {
     void testGetAllAvailableStocks_ReturnsCompleteList() throws Exception {
         // When: Se consultan todas las acciones disponibles
         given()
-        .when()
-            .get("/stock/all")
-        .then()
-            .statusCode(200)
-            .contentType(ContentType.JSON)
-            .body("stocks", notNullValue())
-            .body("stocks.size()", greaterThanOrEqualTo(10)); // Esperamos al menos 10 acciones del seed
+                .when()
+                .get("/stock/all")
+                .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .body("stocks", notNullValue())
+                .body("stocks.size()", greaterThanOrEqualTo(10)); // Esperamos al menos 10 acciones del seed
 
         // Then: Verificar en la base de datos
         List<Stock> stocks = stockRepo.findAll();
@@ -126,8 +130,8 @@ public class StockQueryIntegrationTest {
         // Verificar tiempo de respuesta < 500ms (ISO/IEC 25010)
         long startTime = System.currentTimeMillis();
         given()
-        .when()
-            .get("/stock/all");
+                .when()
+                .get("/stock/all");
         long responseTime = System.currentTimeMillis() - startTime;
 
         assertTrue(responseTime < 500, "El tiempo de respuesta debe ser < 500ms, fue: " + responseTime + "ms");
@@ -136,7 +140,8 @@ public class StockQueryIntegrationTest {
     /**
      * IT-006: Prueba de integración - Consultar acciones adquiridas por usuario
      *
-     * Objetivo: Validar que el endpoint retorna correctamente las acciones que posee un usuario
+     * Objetivo: Validar que el endpoint retorna correctamente las acciones que
+     * posee un usuario
      * ISO/IEC 25010: Funcionalidad (Correctitud) - Filtrado correcto por usuario
      */
     @Test
@@ -147,8 +152,8 @@ public class StockQueryIntegrationTest {
         String username = "testuser1";
 
         // Comprar 3 tipos de acciones diferentes
-        String[] tickers = {"AAPL", "GOOGL", "MSFT"};
-        int[] quantities = {10, 15, 20};
+        String[] tickers = { "AAPL", "GOOGL", "MSFT" };
+        int[] quantities = { 10, 15, 20 };
 
         for (int i = 0; i < tickers.length; i++) {
             BuyRequestDTO buyRequest = new BuyRequestDTO();
@@ -159,25 +164,25 @@ public class StockQueryIntegrationTest {
             buyRequest.amount = 1000.00f * (i + 1);
 
             given()
-                .contentType(ContentType.JSON)
-                .body(buyRequest)
-            .when()
-                .post("/transaction/buy")
-            .then()
-                .statusCode(anyOf(is(200), is(201)));
+                    .contentType(ContentType.JSON)
+                    .body(buyRequest)
+                    .when()
+                    .post("/transaction/buy")
+                    .then()
+                    .statusCode(anyOf(is(200), is(201)));
         }
 
         // When: Se consultan las acciones adquiridas por el usuario
         given()
-            .pathParam("user", username)
-        .when()
-            .get("/stock/ownedstocks/{user}")
-        .then()
-            .statusCode(200)
-            .contentType(ContentType.JSON)
-            .body("size()", equalTo(3))
-            .body("ticker", hasItems("AAPL", "GOOGL", "MSFT"))
-            .body("[0].quantity", notNullValue());
+                .pathParam("user", username)
+                .when()
+                .get("/stock/ownedstocks/{user}")
+                .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .body("size()", equalTo(3))
+                .body("ticker", hasItems("AAPL", "GOOGL", "MSFT"))
+                .body("[0].quantity", notNullValue());
 
         // Then: Verificar en la base de datos
         List<OwnedStock> ownedStocks = ownedStockRepo.findByUser(userRepo.findByUsername(username));
@@ -193,9 +198,9 @@ public class StockQueryIntegrationTest {
         // Verificar tiempo de respuesta
         long startTime = System.currentTimeMillis();
         given()
-            .pathParam("user", username)
-        .when()
-            .get("/stock/ownedstocks/{user}");
+                .pathParam("user", username)
+                .when()
+                .get("/stock/ownedstocks/{user}");
         long responseTime = System.currentTimeMillis() - startTime;
 
         assertTrue(responseTime < 500, "El tiempo de respuesta debe ser < 500ms, fue: " + responseTime + "ms");
@@ -204,7 +209,8 @@ public class StockQueryIntegrationTest {
     /**
      * IT-007: Prueba de integración - Usuario sin acciones
      *
-     * Objetivo: Validar que el endpoint retorna lista vacía para usuarios sin acciones
+     * Objetivo: Validar que el endpoint retorna lista vacía para usuarios sin
+     * acciones
      * ISO/IEC 25010: Funcionalidad (Correctitud) - Manejo correcto de casos vacíos
      */
     @Test
@@ -216,13 +222,13 @@ public class StockQueryIntegrationTest {
 
         // When: Se consultan las acciones adquiridas
         given()
-            .pathParam("user", username)
-        .when()
-            .get("/stock/ownedstocks/{user}")
-        .then()
-            .statusCode(200)
-            .contentType(ContentType.JSON)
-            .body("size()", equalTo(0));
+                .pathParam("user", username)
+                .when()
+                .get("/stock/ownedstocks/{user}")
+                .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .body("size()", equalTo(0));
 
         // Then: Verificar en la base de datos
         List<OwnedStock> ownedStocks = ownedStockRepo.findByUser(userRepo.findByUsername(username));
@@ -232,10 +238,12 @@ public class StockQueryIntegrationTest {
     /**
      * IT-008: Prueba de integración - Consultar EOD data de acción específica
      *
-     * Objetivo: Validar que el endpoint retorna datos EOD correctos para un ticker válido
+     * Objetivo: Validar que el endpoint retorna datos EOD correctos para un ticker
+     * válido
      * ISO/IEC 25010: Funcionalidad (Correctitud) - Datos precisos por ticker
      *
-     * Nota: Este test puede requerir datos EOD precargados o un mock del servicio externo.
+     * Nota: Este test puede requerir datos EOD precargados o un mock del servicio
+     * externo.
      * Si no hay datos EOD disponibles, el endpoint debe manejar esto correctamente.
      */
     @Test
@@ -249,23 +257,24 @@ public class StockQueryIntegrationTest {
         // Then: El endpoint debe responder correctamente (200 OK)
         // Puede retornar datos EOD o un mensaje indicando que no hay datos disponibles
         given()
-            .pathParam("ticker", ticker)
-        .when()
-            .get("/stock/{ticker}")
-        .then()
-            .statusCode(200);
+                .pathParam("ticker", ticker)
+                .when()
+                .get("/stock/{ticker}")
+                .then()
+                .statusCode(200);
 
         // Verificar que el ticker existe en la base de datos
-        Stock stock = stockRepo.findByTicker(ticker);
+        Stock stock = stockRepo.findByTicker(ticker).orElseThrow(
+                () -> new AssertionError("El ticker AAPL debe existir en la base de datos"));
         assertNotNull(stock, "El ticker AAPL debe existir en la base de datos");
         assertEquals("AAPL", stock.getTicker(), "El ticker debe ser AAPL");
 
         // Verificar tiempo de respuesta
         long startTime = System.currentTimeMillis();
         given()
-            .pathParam("ticker", ticker)
-        .when()
-            .get("/stock/{ticker}");
+                .pathParam("ticker", ticker)
+                .when()
+                .get("/stock/{ticker}");
         long responseTime = System.currentTimeMillis() - startTime;
 
         assertTrue(responseTime < 500, "El tiempo de respuesta debe ser < 500ms, fue: " + responseTime + "ms");
@@ -274,7 +283,8 @@ public class StockQueryIntegrationTest {
     /**
      * IT-009: Prueba de integración - Múltiples usuarios con acciones diferentes
      *
-     * Objetivo: Validar que el sistema mantiene correctamente la separación de acciones entre usuarios
+     * Objetivo: Validar que el sistema mantiene correctamente la separación de
+     * acciones entre usuarios
      * ISO/IEC 25010: Fiabilidad (Madurez) - Integridad de datos por usuario
      */
     @Test
@@ -294,22 +304,22 @@ public class StockQueryIntegrationTest {
         buy1.amount = 1500.00f;
 
         given()
-            .contentType(ContentType.JSON)
-            .body(buy1)
-        .when()
-            .post("/transaction/buy")
-        .then()
-            .statusCode(anyOf(is(200), is(201)));
+                .contentType(ContentType.JSON)
+                .body(buy1)
+                .when()
+                .post("/transaction/buy")
+                .then()
+                .statusCode(anyOf(is(200), is(201)));
 
         buy1.ticker = "GOOGL";
         buy1.name = "Alphabet Inc.";
         given()
-            .contentType(ContentType.JSON)
-            .body(buy1)
-        .when()
-            .post("/transaction/buy")
-        .then()
-            .statusCode(anyOf(is(200), is(201)));
+                .contentType(ContentType.JSON)
+                .body(buy1)
+                .when()
+                .post("/transaction/buy")
+                .then()
+                .statusCode(anyOf(is(200), is(201)));
 
         // User2 compra solo MSFT
         BuyRequestDTO buy2 = new BuyRequestDTO();
@@ -320,34 +330,34 @@ public class StockQueryIntegrationTest {
         buy2.amount = 2000.00f;
 
         given()
-            .contentType(ContentType.JSON)
-            .body(buy2)
-        .when()
-            .post("/transaction/buy")
-        .then()
-            .statusCode(anyOf(is(200), is(201)));
+                .contentType(ContentType.JSON)
+                .body(buy2)
+                .when()
+                .post("/transaction/buy")
+                .then()
+                .statusCode(anyOf(is(200), is(201)));
 
         // When/Then: Verificar que cada usuario tiene sus propias acciones
         given()
-            .pathParam("user", user1)
-        .when()
-            .get("/stock/ownedstocks/{user}")
-        .then()
-            .statusCode(200)
-            .body("size()", equalTo(2))
-            .body("ticker", hasItems("AAPL", "GOOGL"))
-            .body("ticker", not(hasItem("MSFT")));
+                .pathParam("user", user1)
+                .when()
+                .get("/stock/ownedstocks/{user}")
+                .then()
+                .statusCode(200)
+                .body("size()", equalTo(2))
+                .body("ticker", hasItems("AAPL", "GOOGL"))
+                .body("ticker", not(hasItem("MSFT")));
 
         given()
-            .pathParam("user", user2)
-        .when()
-            .get("/stock/ownedstocks/{user}")
-        .then()
-            .statusCode(200)
-            .body("size()", equalTo(1))
-            .body("ticker", hasItems("MSFT"))
-            .body("ticker", not(hasItem("AAPL")))
-            .body("ticker", not(hasItem("GOOGL")));
+                .pathParam("user", user2)
+                .when()
+                .get("/stock/ownedstocks/{user}")
+                .then()
+                .statusCode(200)
+                .body("size()", equalTo(1))
+                .body("ticker", hasItems("MSFT"))
+                .body("ticker", not(hasItem("AAPL")))
+                .body("ticker", not(hasItem("GOOGL")));
 
         // Then: Verificar en la base de datos
         List<OwnedStock> user1Stocks = ownedStockRepo.findByUser(userRepo.findByUsername(user1));
@@ -379,22 +389,23 @@ public class StockQueryIntegrationTest {
         // When: Se consultan los datos EOD del último mes
         // Then: El endpoint debe responder correctamente
         given()
-            .pathParam("ticker", ticker)
-        .when()
-            .get("/stock/{ticker}/month")
-        .then()
-            .statusCode(200);
+                .pathParam("ticker", ticker)
+                .when()
+                .get("/stock/{ticker}/month")
+                .then()
+                .statusCode(200);
 
         // Verificar que el ticker existe
-        Stock stock = stockRepo.findByTicker(ticker);
+        Stock stock = stockRepo.findByTicker(ticker).orElseThrow(
+                () -> new AssertionError("El ticker GOOGL debe existir en la base de datos"));
         assertNotNull(stock, "El ticker GOOGL debe existir en la base de datos");
 
         // Verificar tiempo de respuesta
         long startTime = System.currentTimeMillis();
         given()
-            .pathParam("ticker", ticker)
-        .when()
-            .get("/stock/{ticker}/month");
+                .pathParam("ticker", ticker)
+                .when()
+                .get("/stock/{ticker}/month");
         long responseTime = System.currentTimeMillis() - startTime;
 
         assertTrue(responseTime < 500, "El tiempo de respuesta debe ser < 500ms, fue: " + responseTime + "ms");

@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * - Eficiencia del Desempeño: Comportamiento Temporal
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
+// @Testcontainers
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class TransactionIntegrationTest {
@@ -50,18 +50,21 @@ public class TransactionIntegrationTest {
     @LocalServerPort
     private int port;
 
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
-            .withDatabaseName("stocksimulator_test")
-            .withUsername("test")
-            .withPassword("test");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
+    /*
+     * @Container
+     * static PostgreSQLContainer<?> postgres = new
+     * PostgreSQLContainer<>("postgres:15-alpine")
+     * .withDatabaseName("stocksimulator_test")
+     * .withUsername("test")
+     * .withPassword("test");
+     * 
+     * @DynamicPropertySource
+     * static void configureProperties(DynamicPropertyRegistry registry) {
+     * registry.add("spring.datasource.url", postgres::getJdbcUrl);
+     * registry.add("spring.datasource.username", postgres::getUsername);
+     * registry.add("spring.datasource.password", postgres::getPassword);
+     * }
+     */
 
     @Autowired
     private DataSource dataSource;
@@ -97,7 +100,8 @@ public class TransactionIntegrationTest {
     /**
      * IT-001: Prueba de integración - Compra de acciones de extremo a extremo
      *
-     * Objetivo: Validar el flujo completo de compra desde la API hasta la persistencia en BD
+     * Objetivo: Validar el flujo completo de compra desde la API hasta la
+     * persistencia en BD
      * ISO/IEC 25010: Fiabilidad (Madurez) - Transacciones ACID
      */
     @Test
@@ -117,14 +121,14 @@ public class TransactionIntegrationTest {
         buyRequest.amount = 1500.00f;
 
         given()
-            .contentType(ContentType.JSON)
-            .body(buyRequest)
-        .when()
-            .post("/transaction/buy")
-        .then()
-            .statusCode(anyOf(is(200), is(201)))
-            .body("code", equalTo(0))
-            .body("message", containsString("exitosa"));
+                .contentType(ContentType.JSON)
+                .body(buyRequest)
+                .when()
+                .post("/transaction/buy")
+                .then()
+                .statusCode(anyOf(is(200), is(201)))
+                .body("code", equalTo(0))
+                .body("message", containsString("exitosa"));
 
         // Then: Verificar persistencia en la base de datos
 
@@ -134,7 +138,7 @@ public class TransactionIntegrationTest {
 
         Transaction transaction = transactions.get(0);
         assertEquals("buy", transaction.getType(), "El tipo debe ser 'buy'");
-        assertEquals(ticker, transaction.getStockTicker(), "El ticker debe coincidir");
+        assertEquals(ticker, transaction.getTicker(), "El ticker debe coincidir");
         assertEquals(10, transaction.getQuantity(), "La cantidad debe ser 10");
         assertEquals(1500.00f, transaction.getAmount(), 0.01f, "El monto debe coincidir");
 
@@ -152,10 +156,10 @@ public class TransactionIntegrationTest {
         // 3. Verificar tiempo de respuesta < 500ms (ISO/IEC 25010)
         long startTime = System.currentTimeMillis();
         given()
-            .contentType(ContentType.JSON)
-            .body(buyRequest)
-        .when()
-            .post("/transaction/buy");
+                .contentType(ContentType.JSON)
+                .body(buyRequest)
+                .when()
+                .post("/transaction/buy");
         long responseTime = System.currentTimeMillis() - startTime;
 
         assertTrue(responseTime < 500, "El tiempo de respuesta debe ser < 500ms, fue: " + responseTime + "ms");
@@ -184,12 +188,12 @@ public class TransactionIntegrationTest {
         buyRequest.amount = 3000.00f;
 
         given()
-            .contentType(ContentType.JSON)
-            .body(buyRequest)
-        .when()
-            .post("/transaction/buy")
-        .then()
-            .statusCode(anyOf(is(200), is(201)));
+                .contentType(ContentType.JSON)
+                .body(buyRequest)
+                .when()
+                .post("/transaction/buy")
+                .then()
+                .statusCode(anyOf(is(200), is(201)));
 
         // When: Se venden 10 acciones
         SellRequestDTO sellRequest = new SellRequestDTO();
@@ -200,13 +204,13 @@ public class TransactionIntegrationTest {
         sellRequest.amount = 1500.00f;
 
         given()
-            .contentType(ContentType.JSON)
-            .body(sellRequest)
-        .when()
-            .post("/transaction/sell")
-        .then()
-            .statusCode(anyOf(is(200), is(201)))
-            .body("code", equalTo(0));
+                .contentType(ContentType.JSON)
+                .body(sellRequest)
+                .when()
+                .post("/transaction/sell")
+                .then()
+                .statusCode(anyOf(is(200), is(201)))
+                .body("code", equalTo(0));
 
         // Then: Verificar que owned_stock se redujo correctamente
         OwnedStock ownedStock = ownedStockRepo.findByUserAndTicker(
@@ -219,12 +223,12 @@ public class TransactionIntegrationTest {
         sellRequest.quantity = 10;
 
         given()
-            .contentType(ContentType.JSON)
-            .body(sellRequest)
-        .when()
-            .post("/transaction/sell")
-        .then()
-            .statusCode(anyOf(is(200), is(201)));
+                .contentType(ContentType.JSON)
+                .body(sellRequest)
+                .when()
+                .post("/transaction/sell")
+                .then()
+                .statusCode(anyOf(is(200), is(201)));
 
         // Then: Verificar que owned_stock se eliminó (cantidad = 0)
         OwnedStock deletedStock = ownedStockRepo.findByUserAndTicker(
@@ -265,10 +269,10 @@ public class TransactionIntegrationTest {
             buyRequest.amount = 500.00f;
 
             given()
-                .contentType(ContentType.JSON)
-                .body(buyRequest)
-            .when()
-                .post("/transaction/buy");
+                    .contentType(ContentType.JSON)
+                    .body(buyRequest)
+                    .when()
+                    .post("/transaction/buy");
         }
 
         // Crear 2 transacciones para user2
@@ -281,21 +285,21 @@ public class TransactionIntegrationTest {
             buyRequest.amount = 300.00f;
 
             given()
-                .contentType(ContentType.JSON)
-                .body(buyRequest)
-            .when()
-                .post("/transaction/buy");
+                    .contentType(ContentType.JSON)
+                    .body(buyRequest)
+                    .when()
+                    .post("/transaction/buy");
         }
 
         // When: Se consultan transacciones para user1
         given()
-            .queryParam("user", user1)
-        .when()
-            .get("/transaction/all")
-        .then()
-            .statusCode(200)
-            .body("size()", equalTo(3))
-            .body("[0].issuerUsername", equalTo(user1));
+                .queryParam("user", user1)
+                .when()
+                .get("/transaction/all")
+                .then()
+                .statusCode(200)
+                .body("size()", equalTo(3))
+                .body("[0].issuerUsername", equalTo(user1));
 
         // Then: Verificar en la base de datos
         List<Transaction> user1Transactions = transactionRepo.findAllByIssuer(
@@ -312,7 +316,8 @@ public class TransactionIntegrationTest {
     /**
      * IT-004: Prueba de integración - Transferencia de acciones entre usuarios
      *
-     * Objetivo: Validar transferencia correcta y actualización de owned_stock para ambos usuarios
+     * Objetivo: Validar transferencia correcta y actualización de owned_stock para
+     * ambos usuarios
      * ISO/IEC 25010: Fiabilidad (Madurez) - Consistencia de datos
      */
     @Test
@@ -333,12 +338,12 @@ public class TransactionIntegrationTest {
         buyRequest.amount = 2000.00f;
 
         given()
-            .contentType(ContentType.JSON)
-            .body(buyRequest)
-        .when()
-            .post("/transaction/buy")
-        .then()
-            .statusCode(anyOf(is(200), is(201)));
+                .contentType(ContentType.JSON)
+                .body(buyRequest)
+                .when()
+                .post("/transaction/buy")
+                .then()
+                .statusCode(anyOf(is(200), is(201)));
 
         // When: user1 transfiere 5 acciones a user2
         TransferRequestDTO transferRequest = new TransferRequestDTO();
@@ -350,13 +355,13 @@ public class TransactionIntegrationTest {
         transferRequest.amount = 700.00f;
 
         given()
-            .contentType(ContentType.JSON)
-            .body(transferRequest)
-        .when()
-            .post("/transaction/transfer")
-        .then()
-            .statusCode(anyOf(is(200), is(201)))
-            .body("code", equalTo(0));
+                .contentType(ContentType.JSON)
+                .body(transferRequest)
+                .when()
+                .post("/transaction/transfer")
+                .then()
+                .statusCode(anyOf(is(200), is(201)))
+                .body("code", equalTo(0));
 
         // Then: Verificar owned_stock del emisor (debe tener 10)
         OwnedStock issuerStock = ownedStockRepo.findByUserAndTicker(

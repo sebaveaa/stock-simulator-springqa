@@ -97,26 +97,26 @@ class StockControllerTest {
     void testGetAvailableStocks_ReturnsAll() {
         // Given: Lista de acciones disponibles
         StockListResponseDTO expectedResponse = new StockListResponseDTO();
-        expectedResponse.stocks = new ArrayList<>();
+        expectedResponse.stockDTOList = new ArrayList<>();
 
         // Simular 3 acciones en la respuesta
         StockDTO stock1 = new StockDTO();
         stock1.ticker = "AAPL";
         stock1.name = "Apple Inc.";
         stock1.description = "Technology company";
-        expectedResponse.stocks.add(stock1);
+        expectedResponse.stockDTOList.add(stock1);
 
         StockDTO stock2 = new StockDTO();
         stock2.ticker = "GOOGL";
         stock2.name = "Alphabet Inc.";
         stock2.description = "Search and advertising";
-        expectedResponse.stocks.add(stock2);
+        expectedResponse.stockDTOList.add(stock2);
 
         StockDTO stock3 = new StockDTO();
         stock3.ticker = "MSFT";
         stock3.name = "Microsoft Corp.";
         stock3.description = "Software company";
-        expectedResponse.stocks.add(stock3);
+        expectedResponse.stockDTOList.add(stock3);
 
         when(stockService.findAll()).thenReturn(expectedResponse);
 
@@ -126,8 +126,8 @@ class StockControllerTest {
         // Then: Verificar respuesta exitosa
         assertEquals(HttpStatus.OK, response.getStatusCode(), "El código de estado debe ser 200 OK");
         assertNotNull(response.getBody(), "El cuerpo de la respuesta no debe ser nulo");
-        assertEquals(3, response.getBody().stocks.size(), "Debe retornar 3 acciones");
-        assertEquals("AAPL", response.getBody().stocks.get(0).ticker, "El primer ticker debe ser AAPL");
+        assertEquals(3, response.getBody().stockDTOList.size(), "Debe retornar 3 acciones");
+        assertEquals("AAPL", response.getBody().stockDTOList.get(0).ticker, "El primer ticker debe ser AAPL");
 
         verify(stockService, times(1)).findAll();
     }
