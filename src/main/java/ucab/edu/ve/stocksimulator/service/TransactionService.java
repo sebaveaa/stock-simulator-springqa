@@ -50,6 +50,7 @@ public class TransactionService {
         transaction.setQuantity(buyRequestDTO.quantity);
         transaction.setReceptor(null);
         transaction.setNameStock(buyRequestDTO.name);
+        transaction.setTicker(buyRequestDTO.ticker);
         transaction.setType("buy");
         transaction.setAmount(buyRequestDTO.amount);
         transaction.setDate(LocalDate.now());
@@ -63,6 +64,7 @@ public class TransactionService {
         transaction.setQuantity(sellRequestDTO.quantity);
         transaction.setReceptor(null);
         transaction.setNameStock(sellRequestDTO.name);
+        transaction.setTicker(sellRequestDTO.ticker);
         transaction.setType("sell");
         transaction.setAmount(sellRequestDTO.amount);
         transaction.setDate(LocalDate.now());
@@ -77,6 +79,7 @@ public class TransactionService {
         transaction.setQuantity(transferRequestDTO.quantity);
         transaction.setReceptor(receptorUser);
         transaction.setNameStock(transferRequestDTO.name);
+        transaction.setTicker(transferRequestDTO.ticker);
         transaction.setType("transfer");
         transaction.setAmount(transferRequestDTO.amount);
         transaction.setDate(LocalDate.now());

@@ -259,6 +259,10 @@ public class TransactionIntegrationTest {
     @Order(3)
     @DisplayName("IT-003: Consulta de transacciones - Filtrado correcto por usuario")
     void testQueryTransactions_EndToEnd() throws Exception {
+        // Limpiar transacciones antes de este test para asegurar datos limpios
+        transactionRepo.deleteAll();
+        ownedStockRepo.deleteAll();
+        
         // Given: Múltiples transacciones para diferentes usuarios
         String user1 = "testuser1";
         String user2 = "testuser2";
