@@ -1,0 +1,161 @@
+name: Tests Unitarios e Integración
+
+on:
+  push:
+    branches: [ main, develop, master ]
+  pull_request:
+    branches: [ main, develop, master ]
+
+jobs:
+  unit-tests:
+    name: Tests Unitarios
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+      
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      
+      - name: Ejecutar tests unitarios
+        run: |
+          mvn clean test -Dtest="!**/integration/**" -DfailIfNoTests=false
+      
+      - name: Generar reporte de cobertura
+        if: always()
+        run: |
+          mvn jacoco:report -Dtest="!**/integration/**"
+      
+      - name: Subir reporte de cobertura como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-unit
+          path: target/site/jacoco/index.html
+          retention-days: 30
+
+  integration-tests:
+    name: Tests de Integración
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: stocksimulator_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+      
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Ejecutar tests de integración
+        run: |
+          mvn clean test -Dtest="**/integration/**" -DfailIfNoTests=false
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/stocksimulator_test
+          SPRING_DATASOURCE_USERNAME: test
+          SPRING_DATASOURCE_PASSWORD: test
+      
+      - name: Generar reporte de cobertura para integración
+        if: always()
+        run: |
+          mvn jacoco:report -Dtest="**/integration/**"
+      
+      - name: Subir reporte de cobertura como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-integration
+          path: target/site/jacoco/index.html
+          retention-days: 30
+
+  all-tests:
+    name: Todos los Tests
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests]
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: stocksimulator_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+      
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Ejecutar todos los tests
+        run: |
+          mvn clean test
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/stocksimulator_test
+          SPRING_DATASOURCE_USERNAME: test
+          SPRING_DATASOURCE_PASSWORD: test
+      
+      - name: Verificar cobertura de código
+        run: |
+          mvn jacoco:check
+      
+      - name: Generar reporte de cobertura completo
+        if: always()
+        run: |
+          mvn jacoco:report
+      
+      - name: Subir reporte de cobertura completo como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-complete
+          path: target/site/jacoco/index.html
+          retention-days: 30
+      
+      - name: Subir reporte XML de cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: target/site/jacoco/jacoco.xml
+          retention-days: 30
