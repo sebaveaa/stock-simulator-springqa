@@ -85,6 +85,10 @@ public class StockQueryIntegrationTest {
         RestAssured.port = port;
         RestAssured.basePath = "/api";
 
+        // Limpiar datos antes de cargar nuevos datos de prueba
+        transactionRepo.deleteAll();
+        ownedStockRepo.deleteAll();
+        
         // Cargar datos de prueba
         TestDataLoader.loadAllTestData(dataSource);
     }
@@ -114,8 +118,8 @@ public class StockQueryIntegrationTest {
                 .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
-                .body("stocks", notNullValue())
-                .body("stocks.size()", greaterThanOrEqualTo(10)); // Esperamos al menos 10 acciones del seed
+                .body("stockDTOList", notNullValue())
+                .body("stockDTOList.size()", greaterThanOrEqualTo(10)); // Esperamos al menos 10 acciones del seed
 
         // Then: Verificar en la base de datos
         List<Stock> stocks = stockRepo.findAll();

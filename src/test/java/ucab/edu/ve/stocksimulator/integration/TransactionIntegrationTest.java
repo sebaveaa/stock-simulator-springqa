@@ -86,6 +86,10 @@ public class TransactionIntegrationTest {
         RestAssured.port = port;
         RestAssured.basePath = "/api";
 
+        // Limpiar datos antes de cargar nuevos datos de prueba
+        transactionRepo.deleteAll();
+        ownedStockRepo.deleteAll();
+        
         // Cargar datos de prueba
         TestDataLoader.loadAllTestData(dataSource);
     }
@@ -128,7 +132,7 @@ public class TransactionIntegrationTest {
                 .then()
                 .statusCode(anyOf(is(200), is(201)))
                 .body("code", equalTo(0))
-                .body("message", containsString("exitosa"));
+                .body("message", containsString("successfully"));
 
         // Then: Verificar persistencia en la base de datos
 
