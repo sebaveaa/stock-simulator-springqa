@@ -3,7 +3,7 @@ package ucab.edu.ve.stocksimulator.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "contactforms")
+@Table(name = "contactforms")#d
 
 public class ContactForm {
     @Id
