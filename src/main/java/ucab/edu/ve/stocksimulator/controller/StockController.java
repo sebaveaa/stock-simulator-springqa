@@ -71,5 +71,4 @@ public class StockController {
         MessageResponseDTO message = new MessageResponseDTO(0, "Acciones creadas");
         return ResponseEntity.status(HttpStatus.CREATED).body(message);
     }
-
 }

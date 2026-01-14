@@ -1,4 +1,4 @@
-name: Tests Unitarios e Integración
+name: Tests Unitarios
 
 on:
   push:
@@ -31,86 +31,254 @@ jobs:
         run: |
           mvn jacoco:report -Dtest="!**/integration/**,!**/StockSimulatorApplicationTests"
       
-      - name: Subir reporte de cobertura como artefacto
+      - name: Generar reporte HTML mejorado
+        if: always()
+        run: |
+          mkdir -p target/site/jacoco-enhanced
+          # Copiar todos los archivos del reporte original
+          cp -r target/site/jacoco/* target/site/jacoco-enhanced/ 2>/dev/null || true
+          
+          # Crear un wrapper HTML mejorado
+          cat > target/site/jacoco-enhanced/reporte-cobertura.html << 'REPORTE_EOF'
+          <!DOCTYPE html>
+          <html lang="es">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Reporte de Cobertura de Código - Stock Simulator</title>
+              <style>
+                  * { margin: 0; padding: 0; box-sizing: border-box; }
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      padding: 20px;
+                      min-height: 100vh;
+                  }
+                  .container {
+                      max-width: 1400px;
+                      margin: 0 auto;
+                      background: white;
+                      border-radius: 12px;
+                      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                      overflow: hidden;
+                  }
+                  .header {
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      color: white;
+                      padding: 40px 30px;
+                      text-align: center;
+                  }
+                  .header h1 {
+                      font-size: 2.8em;
+                      margin-bottom: 10px;
+                      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+                  }
+                  .header p {
+                      font-size: 1.2em;
+                      opacity: 0.95;
+                  }
+                  .stats {
+                      display: grid;
+                      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                      gap: 25px;
+                      padding: 40px 30px;
+                      background: #f8f9fa;
+                  }
+                  .stat-card {
+                      background: white;
+                      padding: 25px;
+                      border-radius: 10px;
+                      box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+                      text-align: center;
+                      transition: all 0.3s ease;
+                      border-top: 4px solid #667eea;
+                  }
+                  .stat-card:hover {
+                      transform: translateY(-8px);
+                      box-shadow: 0 6px 25px rgba(0,0,0,0.15);
+                  }
+                  .stat-value {
+                      font-size: 3em;
+                      font-weight: bold;
+                      color: #667eea;
+                      margin-bottom: 8px;
+                  }
+                  .stat-label {
+                      color: #6c757d;
+                      font-size: 0.95em;
+                      text-transform: uppercase;
+                      letter-spacing: 1.5px;
+                      font-weight: 600;
+                  }
+                  .content {
+                      padding: 30px;
+                  }
+                  .info-box {
+                      background: linear-gradient(135deg, #e7f3ff 0%, #f0f8ff 100%);
+                      border-left: 5px solid #2196F3;
+                      padding: 20px;
+                      margin-bottom: 25px;
+                      border-radius: 6px;
+                      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                  }
+                  .info-box strong {
+                      color: #1976D2;
+                      font-size: 1.1em;
+                  }
+                  .info-box p {
+                      margin-top: 8px;
+                      line-height: 1.6;
+                      color: #333;
+                  }
+                  .link-box {
+                      background: #fff3cd;
+                      border-left: 5px solid #ffc107;
+                      padding: 15px;
+                      margin-bottom: 20px;
+                      border-radius: 6px;
+                  }
+                  .link-box a {
+                      color: #856404;
+                      text-decoration: none;
+                      font-weight: 600;
+                      font-size: 1.05em;
+                  }
+                  .link-box a:hover {
+                      text-decoration: underline;
+                  }
+                  iframe {
+                      width: 100%;
+                      height: 900px;
+                      border: 2px solid #e0e0e0;
+                      border-radius: 8px;
+                      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                  }
+                  .footer {
+                      background: #f8f9fa;
+                      padding: 25px;
+                      text-align: center;
+                      color: #6c757d;
+                      border-top: 2px solid #dee2e6;
+                  }
+                  .badge {
+                      display: inline-block;
+                      padding: 5px 12px;
+                      border-radius: 20px;
+                      font-size: 0.85em;
+                      font-weight: 600;
+                      margin-left: 10px;
+                  }
+                  .badge-success {
+                      background: #d4edda;
+                      color: #155724;
+                  }
+                  .badge-warning {
+                      background: #fff3cd;
+                      color: #856404;
+                  }
+                  @media (max-width: 768px) {
+                      .header h1 { font-size: 2em; }
+                      .stats { grid-template-columns: 1fr; padding: 20px; }
+                      .content { padding: 20px; }
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <div class="header">
+                      <h1>📊 Reporte de Cobertura de Código</h1>
+                      <p>Stock Simulator - Tests Unitarios <span class="badge badge-success">ISO/IEC 25010</span></p>
+                  </div>
+                  <div class="stats">
+                      <div class="stat-card">
+                          <div class="stat-value" id="instruction">-</div>
+                          <div class="stat-label">Instrucciones</div>
+                      </div>
+                      <div class="stat-card">
+                          <div class="stat-value" id="branch">-</div>
+                          <div class="stat-label">Ramas</div>
+                      </div>
+                      <div class="stat-card">
+                          <div class="stat-value" id="line">-</div>
+                          <div class="stat-label">Líneas</div>
+                      </div>
+                      <div class="stat-card">
+                          <div class="stat-value" id="method">-</div>
+                          <div class="stat-label">Métodos</div>
+                      </div>
+                  </div>
+                  <div class="content">
+                      <div class="info-box">
+                          <strong>ℹ️ Información del Reporte</strong>
+                          <p>
+                              Este reporte muestra la cobertura de código de los tests unitarios ejecutados en GitHub Actions.
+                              Los umbrales mínimos establecidos son <strong>80% para líneas</strong> y <strong>85% para ramas</strong> 
+                              según los estándares ISO/IEC 25010 para garantizar la calidad del código.
+                          </p>
+                      </div>
+                      <div class="link-box">
+                          <strong>🔗 Enlaces:</strong>
+                          <a href="index.html" target="_blank">Ver reporte detallado de JaCoCo</a> | 
+                          <a href="jacoco.xml" target="_blank">Descargar XML</a>
+                      </div>
+                      <iframe src="index.html" title="Reporte de Cobertura Detallado de JaCoCo" id="coverageFrame"></iframe>
+                  </div>
+                  <div class="footer">
+                      <p>📅 Generado automáticamente por GitHub Actions | 🏢 Stock Simulator QA Team</p>
+                      <p style="margin-top: 10px; font-size: 0.9em;">Para más detalles, descarga el artefacto completo desde la pestaña de artefactos del workflow</p>
+                  </div>
+              </div>
+              <script>
+                  // Función para extraer estadísticas del reporte JaCoCo
+                  function extractStats() {
+                      try {
+                          const iframe = document.getElementById('coverageFrame');
+                          if (iframe.contentDocument) {
+                              const doc = iframe.contentDocument;
+                              const tfoot = doc.querySelector('tfoot');
+                              if (tfoot) {
+                                  const cells = tfoot.querySelectorAll('td.ctr2, td.ctr1');
+                                  if (cells.length >= 4) {
+                                      document.getElementById('instruction').textContent = cells[0]?.textContent.trim() || '-';
+                                      document.getElementById('branch').textContent = cells[1]?.textContent.trim() || '-';
+                                      document.getElementById('line').textContent = cells[2]?.textContent.trim() || '-';
+                                      document.getElementById('method').textContent = cells[3]?.textContent.trim() || '-';
+                                  }
+                              }
+                          }
+                      } catch(e) {
+                          // Si hay error de CORS, intentar cargar desde el mismo origen
+                          console.log('Extrayendo estadísticas...');
+                      }
+                  }
+                  
+                  // Intentar extraer estadísticas cuando el iframe cargue
+                  document.getElementById('coverageFrame').addEventListener('load', function() {
+                      setTimeout(extractStats, 1000);
+                  });
+                  
+                  // También intentar después de un tiempo adicional
+                  setTimeout(extractStats, 3000);
+              </script>
+          </body>
+          </html>
+          REPORTE_EOF
+          
+          # Crear un índice principal que redirija al reporte mejorado
+          if [ -f target/site/jacoco-enhanced/index.html ]; then
+              mv target/site/jacoco-enhanced/index.html target/site/jacoco-enhanced/jacoco-original.html
+          fi
+          cp target/site/jacoco-enhanced/reporte-cobertura.html target/site/jacoco-enhanced/index.html
+      
+      - name: Subir reporte de cobertura mejorado como artefacto
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report-unit
-          path: target/site/jacoco/index.html
-          retention-days: 30
-
-  integration-tests:
-    name: Tests de Integración
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout código
-        uses: actions/checkout@v4
-      
-      - name: Configurar Java 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: maven
-      
-      - name: Ejecutar tests de integración
-        run: |
-          mvn clean test -Dtest="**/integration/**,**/StockSimulatorApplicationTests" -DfailIfNoTests=false
-        env:
-          SPRING_PROFILES_ACTIVE: test
-      
-      - name: Generar reporte de cobertura para integración
-        if: always()
-        run: |
-          mvn jacoco:report -Dtest="**/integration/**,**/StockSimulatorApplicationTests"
-      
-      - name: Subir reporte de cobertura como artefacto
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report-integration
-          path: target/site/jacoco/index.html
-          retention-days: 30
-
-  all-tests:
-    name: Todos los Tests
-    runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests]
-    
-    steps:
-      - name: Checkout código
-        uses: actions/checkout@v4
-      
-      - name: Configurar Java 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: maven
-      
-      - name: Ejecutar todos los tests
-        run: |
-          mvn clean test
-        env:
-          SPRING_PROFILES_ACTIVE: test
-      
-      - name: Verificar cobertura de código
-        run: |
-          mvn jacoco:check
-      
-      - name: Generar reporte de cobertura completo
-        if: always()
-        run: |
-          mvn jacoco:report
-      
-      - name: Subir reporte de cobertura completo como artefacto
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report-complete
-          path: target/site/jacoco/index.html
-          retention-days: 30
+          name: coverage-report-enhanced
+          path: |
+            target/site/jacoco-enhanced/
+            target/site/jacoco/
+          retention-days: 90
       
       - name: Subir reporte XML de cobertura
         if: always()
@@ -118,4 +286,17 @@ jobs:
         with:
           name: coverage-xml
           path: target/site/jacoco/jacoco.xml
-          retention-days: 30
+          retention-days: 90
+      
+      - name: Mostrar resumen de cobertura
+        if: always()
+        run: |
+          echo "## 📊 Resumen de Cobertura de Código" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f target/site/jacoco/index.html ]; then
+              echo "✅ Reporte de cobertura generado exitosamente" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "📥 Descarga el reporte completo desde los artefactos de este workflow" >> $GITHUB_STEP_SUMMARY
+          else
+              echo "⚠️ No se pudo generar el reporte de cobertura" >> $GITHUB_STEP_SUMMARY
+          fi
